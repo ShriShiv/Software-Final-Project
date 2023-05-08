@@ -45,7 +45,7 @@ The windows will be displayed in GUI.
 4. Once done, they can upload changes for the specific patient 
 
 
-
+All the forms are made using classes
 
 
 
