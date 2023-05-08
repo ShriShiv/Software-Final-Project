@@ -10,7 +10,7 @@ import wave
 import librosa
 
 
-client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+client = pymongo.MongoClient("mongodb+srv://sshivra1:<password>@cluster0.cxduuuj.mongodb.net/") #Hidden passeord, updated when running
 db = client["mydatabase"]
 collection = db["patients"]
 print(client.server_info())
@@ -266,7 +266,7 @@ class PatientForm(tk.Frame):
         audio_file_path = filedialog.askopenfilename(filetypes=[("Waveform Audio File Format", "*.wav")])
         if fname and lname and age and ph and email and audio_file_path:
             # Insert data into MongoDB
-            client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+            client = pymongo.MongoClient("mongodb+srv://sshivra1:<password>@cluster0.cxduuuj.mongodb.net/") #Hidden passeord, updated when running
             db = client.patients_db
             patients = db.patients
             patient = {
