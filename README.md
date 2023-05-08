@@ -1,6 +1,7 @@
 # Software Final Project
 
-##Patient Monitoring Client Server System
+## Patient Monitoring Client Server System
+
 The purpose of this project is to develop a patient monitoring client server system for patients with sleep disorders like sleep apnea. This system enables patients to upload their information and snoring files, which will then be stored on a server (MongoDb is used for storing the data). The provider can access the patient data and provide suggestions based on the data.
 
 The system allows the following functionalities:
