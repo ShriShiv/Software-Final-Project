@@ -28,7 +28,8 @@ The windows will be displayed in GUI.
 
 #### Patient Side
 
-1. Run the main code and the login GUI will pop up
+1. Run the main code and the login GUI will pop up <img width="269" alt="image" src="https://github.com/ShriShiv/Software-Final-Project/assets/16839045/103fc076-041e-414f-a119-c5e48def705f">
+
 2. Login using a specific userID and Password (SoftwareProject and asdf12345)
 3. If the login is incorrect, there will be a popup that states "Incorrect username or password" 
 4. Try again to add the correct username and password
