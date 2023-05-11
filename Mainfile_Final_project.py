@@ -731,10 +731,10 @@ login = LoginGUI(root)
 root.attributes('-fullscreen', True)
 root.mainloop()
 
-# root2 = tk.Tk()
-# login = ProviderForm(root2)
-# root2.attributes('-fullscreen', True)
-# root2.mainloop()
+root2 = tk.Tk()
+login = ProviderForm(root2)
+root2.attributes('-fullscreen', True)
+root2.mainloop()
 
 
 
