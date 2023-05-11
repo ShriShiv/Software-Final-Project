@@ -1,3 +1,8 @@
+'''
+Shri Prabha Shivram
+Software Carpentry Final Project = "Patient and Provider System"
+'''
+#Importing all the required modules
 import tkinter as tk
 from tkinter import filedialog
 import matplotlib.pyplot as plt
@@ -8,9 +13,14 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 import wave
 import librosa
+from gridfs import GridFS
+from bson import ObjectId
+from pymongo import MongoClient
+import os
+import librosa.display
 
-
-client = pymongo.MongoClient("mongodb+srv://sshivra1:<password>@cluster0.cxduuuj.mongodb.net/") #Hidden passeord, updated when running
+#Initilizing connection to MongoDB 
+client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
 db = client["mydatabase"]
 collection = db["patients"]
 print(client.server_info())
@@ -73,29 +83,72 @@ class LoginGUI:
         if username == "SoftwareProject" and password == "asdf12345":
             self.master.destroy()
             root = tk.Tk()
-            patient_gui = PatientForm(root)
+            patient_type = UserType(root)
             
         else:
             messagebox.showerror("Error", "Incorrect username or password.")
 
-# class UserType:
-#     def __init__(self, master):
-#         self.master = master
-#         master.title("User Type")
-#         self.button_newuser = tk.Button(master, text="New User", command = self.Patient_Form)
-#         self.button_newuser.grid(row=0, column=0, columnspan=2)
-        
-#         self.button_existuser = tk.Button(master, text="Existing User", command = self.Patient_Form)
-#         self.button_existuser.grid(row=1, column=0, columnspan=2)
-#     def Patient_Form(self):
-#         root = tk.Toplevel()
-#         patient_form = PatientForm(root)
+class UserType:
+    '''
+    GUI for user to select the form
+    Parameters:
+    master (Tk): the root window for the GUI.
 
-#         # Destroy the UserType window
-#         self.master.destroy()
+    Attributes:
+    master (Tk): the root window for the GUI.
+    button_newuser (Button): a button for that opens an empty form that new user can fill.
+    button_existuser (Button): a button for opening existing form that displays clinician feedback.
+
+    Methods:
+    __init__(self, master): initializes the GUI window and its elements.
+    New_Patient_Form(self): Connects to the new patient form 
+    Exist_Patient_Form(self): Connects to the existing patient form 
+    '''
+    def __init__(self, master):
+        '''
+        Initializes the UserType window and its elements. The window consists of two button that will take the user to the 
+        respected forms (new patient form or existing patient form)
+
+        Parameters:
+        master (Tk): the root window for the GUI.
+
+        Returns:None
+        '''
+        self.master = master
+        master.title("User Type")
+        self.button_newuser = tk.Button(master, text="New User", command = self.New_Patient_Form)
+        self.button_newuser.grid(row=0, column=0, columnspan=2)
+        
+        self.button_existuser = tk.Button(master, text="Existing User", command = self.Exist_Patient_Form)
+        self.button_existuser.grid(row=1, column=0, columnspan=2)
+    
+    def New_Patient_Form(self):
+        '''
+        Connects to the New Patient Form class 
+
+        Returns: None
+        '''
+        root = tk.Tk()
+        patient_form = NewPatientForm(root)
+
+        # Destroy the UserType window
+        self.master.destroy()
+    
+    def Exist_Patient_Form(self):
+        '''
+        Connects to the Existing Patient Form class 
+
+        Returns: None
+        '''
+        root = tk.Tk()
+        existing_patient_form = ExistingPatientForm(master=root)
+
+        # Destroy the UserType window
+        self.master.destroy()
+        
     
 
-class PatientForm(tk.Frame):
+class NewPatientForm(tk.Frame):
     '''
     A class representing a form for collecting patient information, including first name, last name, 
     age, contact phone, contact email, and snoring audio file. The form can be submitted, which 
@@ -144,6 +197,7 @@ class PatientForm(tk.Frame):
         self.master = master
         self.pack()
         self.create_widgets()
+        master.title("Patient Form")
 
     def create_widgets(self):
         '''
@@ -160,57 +214,81 @@ class PatientForm(tk.Frame):
         The code will take all the data and move to the next method "upload_audio_file" to upload the file. 
         '''
         # Row 0
-        self.number_label = tk.Label(self, text="Patient Record Number:")
+        self.number_label = tk.Label(self, text="Patient Record Number:*")
         self.number_label.grid(row=0, column=0)
         self.number_entry = tk.Entry(self)
         self.number_entry.grid(row=0, column=1)
 
         # Row 1
-        self.fname_label = tk.Label(self, text="First Name:")
+        self.fname_label = tk.Label(self, text="First Name:*")
         self.fname_label.grid(row=1, column=0)
         self.fname_entry = tk.Entry(self)
         self.fname_entry.grid(row=1, column=1)
         
         # Row 2
-        self.lname_label = tk.Label(self, text="Last Name:")
+        self.lname_label = tk.Label(self, text="Last Name:*")
         self.lname_label.grid(row=2, column=0)
         self.lname_entry = tk.Entry(self)
         self.lname_entry.grid(row=2, column=1)
         
         # Row 3
-        self.age_label = tk.Label(self, text="Age:")
+        self.age_label = tk.Label(self, text="Age:*")
         self.age_label.grid(row=3, column=0)
         self.age_entry = tk.Entry(self)
         self.age_entry.grid(row=3, column=1)
 
         # Row 4
-        self.ph_label = tk.Label(self, text="Contact Phone:")
+        self.ph_label = tk.Label(self, text="Contact Phone:*")
         self.ph_label.grid(row=4, column=0)
         self.ph_entry = tk.Entry(self)
         self.ph_entry.grid(row=4, column=1)
 
         # Row 5
-        self.email_label = tk.Label(self, text="Contact Email:")
+        self.email_label = tk.Label(self, text="Contact Email:*")
         self.email_label.grid(row=5, column=0)
         self.email_entry = tk.Entry(self)
         self.email_entry.grid(row=5, column=1)
 
         # Row 6
-        self.audio_label = tk.Label(self, text="Audio file:")
+        self.audio_label = tk.Label(self, text="Audio file:*")
         self.audio_label.grid(row=6, column=0)
         self.upload_button = tk.Button(self, text="Upload", command=self.upload_audio_file)
         self.upload_button.grid(row=6, column=1)
 
         # Row 7
-        self.plot_label = tk.Label(self, text="Plot:")
+        self.plot_label = tk.Label(self, text="Plot:*")
         self.plot_label.grid(row=7, column=0)
         self.plot_canvas = tk.Canvas(self, width=400, height=300, bg="white")
         self.plot_canvas.grid(row=8, column=0, columnspan=2)
-
+        self.canvas = None
         # Row 9
-        self.submit_button = tk.Button(self, text="Submit", command=self.submit_form)
-        self.submit_button.grid(row=9, column=1)
+        self.back_button = tk.Button(self, text="Back", command=self.back)
+        self.back_button.grid(row=9, column=0)
 
+        #Row 9
+        self.clear_button = tk.Button(self, text = "New Form", command = self.new_form)
+        self.clear_button.grid(row = 9, column = 1)
+
+        #Row 9
+        self.submit_button = tk.Button(self, text="Submit", command=self.submit_form)
+        self.submit_button.grid(row=9, column=2)
+
+        
+    def back(self):
+        '''
+        Take the user back to the form where they can either select a new patient or an 
+        existing patient. This can be used to check the status of the new patient or any 
+        other existing patient on the feedback provided by the clinician. 
+        
+        Parameters: None
+
+        Returns: None
+        '''
+        root = tk.Tk()
+        Back_to_user = UserType(root)
+        self.master.destroy()
+        
+    
     def upload_audio_file(self):
         '''
         This method takes in the snoring audio file in .wav format
@@ -236,15 +314,25 @@ class PatientForm(tk.Frame):
         below the upload file button. 
         '''
         if file_path:
-            signal, _ = librosa.load(file_path, sr=44100)
-            plt.figure(figsize=(4,3))
-            plt.plot(signal)
-            #plt.axis('off')
+            signal, sr = librosa.load(file_path, sr=44100)
+            duration = signal.shape[0] / sr
+            time_axis = np.linspace(0, duration, signal.shape[0], endpoint=False)
+
+            fig = plt.figure(figsize=(4,3))
+            ax = fig.add_subplot(111)
+            ax.plot(time_axis, signal)
+            ax.set_xlabel('Time (seconds)')
+            ax.set_ylabel('Amplitude')
             plt.tight_layout()
-            plt.savefig('plot.png')
-            self.plot_image = tk.PhotoImage(file='plot.png')
-            self.plot_canvas.create_image(0, 0, image=self.plot_image, anchor='nw')
+            
+            if self.canvas:
+                self.canvas.get_tk_widget().destroy()  # Remove previous canvas if it exists
+            
+            self.canvas = FigureCanvasTkAgg(fig, master=self.plot_canvas)
+            self.canvas.draw()
+            self.canvas.get_tk_widget().pack()
             plt.close()
+
 
     def submit_form(self):
         '''
@@ -257,7 +345,7 @@ class PatientForm(tk.Frame):
         The code will upload all the patient data into MongoDB and the provider will be 
         able to see the data from their end. 
         '''
-        number = self.number_enter.get()
+        number = self.number_entry.get()
         fname = self.fname_entry.get()
         lname = self.lname_entry.get()
         age = self.age_entry.get()
@@ -266,8 +354,13 @@ class PatientForm(tk.Frame):
         audio_file_path = filedialog.askopenfilename(filetypes=[("Waveform Audio File Format", "*.wav")])
         if fname and lname and age and ph and email and audio_file_path:
             # Insert data into MongoDB
-            client = pymongo.MongoClient("mongodb+srv://sshivra1:<password>@cluster0.cxduuuj.mongodb.net/") #Hidden passeord, updated when running
+            client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
             db = client.patients_db
+            fs = GridFS(db)
+            with open(audio_file_path, 'rb') as f:
+                file_id = fs.put(f, filename=os.path.basename(audio_file_path))
+ 
+            
             patients = db.patients
             patient = {
                 "patient record number": number,
@@ -276,20 +369,13 @@ class PatientForm(tk.Frame):
                 "age": age,
                 "phone": ph,
                 "email":email,
-                "audio_file_path": audio_file_path,
+                "audio_file": file_id,
             }
             patients.insert_one(patient)
-            # Clear the form
-            self.number_entry.delete(0, tk.END)
-            self.fname_entry.delete(0, tk.END)
-            self.lname_entry.delete(0, tk.END)
-            self.age_entry.delete(0, tk.END)
-            self.ph_entry.delete(0, tk.END)
-            self.email_entry.delete(0, tk.END)
-            self.plot_canvas.delete("all")
-            self.plot_image = None
-            self.submit_button = tk.Button(self.master, text="Submit", command=self.insert_patient)
-            self.submit_button.pack()
+            print("Registration data saved to MongoDB")
+            
+           
+           
     def insert_patient(self):
         '''
         This is the last method that finally inserts all the data
@@ -298,13 +384,33 @@ class PatientForm(tk.Frame):
 
         Returns: None
         '''
-        number = self.number_entru.gets()
+        number = self.number_entry.get()
         fname = self.fname_entry.get()
         lname = self.lname_entry.get()
         age = self.age_entry.get()
         ph = self.ph_entry.get()
         email = self.email_entry.get()
-        #audio_file_path =
+
+
+    def new_form(self):
+        '''
+        This attribut erases all the information in the existing form and creates a blank one to fill new patient data
+        
+        Parameters: None
+
+        Returns: None
+        '''
+        # Clear the form
+        self.number_entry.delete(0, tk.END)
+        self.fname_entry.delete(0, tk.END)
+        self.lname_entry.delete(0, tk.END)
+        self.age_entry.delete(0, tk.END)
+        self.ph_entry.delete(0, tk.END)
+        self.email_entry.delete(0, tk.END)
+        self.plot_canvas.delete("all")
+        self.canvas.get_tk_widget().destroy() 
+        
+
 
 
 
@@ -313,19 +419,22 @@ class ProviderForm(tk.Frame):
     '''
     A class representing a form for viewing patient information, including patient record number, first name, last name, 
     age, contact phone, contact email, and snoring audio file. The form can be updated, which 
-    will take the patient information from MongoDB database to display code.
+    will take the patient information from MongoDB database to display code. The physician viewing it can then provide
+    two types of response. A quick response using a dropdown menu with the following options: 
+    "Normal", "Need to visit sleep clinic", "Need to get sleep study". There is also a section called physician notes. 
+    In the physician notes section, the physician can provide detailed notes if necessary. 
 
     Attributes:
     - master (Tk): the root window for the GUI.
 
     Methods:
     - __init__(self, master=None): initializes the ProviderForm window and its elements.
-    - display_patients(self): displays all patient information in the GUI window.
-    - search_patients(self): searches for patient information based on user input and displays the results in the GUI window.
-    """
+    - open_patients(self): gets the patient record number and searches from MongoDB to get the patient information 
+    - connect_to_mongodb(self): Creates a connection to a new mongodb database 
+    - save_to_mongodb(self): Uploads the data to the new mongodb database 
     '''
     def __init__(self, master=None):
-         '''
+        '''
         Initializes the PatientForms window and its elements.
 
         Parameters:
@@ -336,70 +445,296 @@ class ProviderForm(tk.Frame):
         super().__init__(master)
         self.master = master
         self.master.title("Provider Form")
+        self.master.fullscreen = True
+        # configure rows and columns to expand
+        self.master.grid_rowconfigure(0, weight=1, uniform ='rows')
+        self.master.grid_rowconfigure(1, weight=1, uniform ='rows')
+        self.master.grid_rowconfigure(2, weight=1, uniform ='rows')
+        self.master.grid_rowconfigure(3, weight=1, uniform ='rows')
+        self.master.grid_rowconfigure(4, weight=1, uniform ='rows')
+        self.master.grid_rowconfigure(5, weight=1, uniform ='rows')
+        self.master.grid_rowconfigure(6, weight=1, uniform ='rows')
+        self.master.grid_rowconfigure(7, weight=1, uniform ='rows')
+        self.master.grid_rowconfigure(8, weight=1)
+        self.master.grid_rowconfigure(9, weight=1, uniform ='rows')
+        self.master.grid_columnconfigure(0, weight=1)
+        self.master.grid_columnconfigure(1, weight=1)
+        self.master.grid_columnconfigure(2, weight=1)
 
-        # create a label to display the patient information
-        self.info_label = tk.Label(self.master, text="")
-        self.info_label.pack()
+        # create a label and entry for patient id
+        tk.Label(master, text="Patient Record Number: ").grid(row=0, column=0)
+        self.patient_num_entry = tk.Entry(master)
+        self.patient_num_entry.grid(row=0, column=1)
 
-        # add a search bar to search for patients by name
-        self.search_var = tk.StringVar()
-        self.search_bar = tk.Entry(self.master, textvariable=self.search_var)
-        self.search_bar.pack()
-        self.search_button = tk.Button(self.master, text="Search", command=self.search_patients)
-        self.search_button.pack()
+        # create a button to open the patient information
+        tk.Button(master, text="Open", command=self.open_patient).grid(row=0, column=2)
 
-        # display all patients by default
-        self.display_patients()
+        # create labels to display patient information
+        tk.Label(master, text="First Name: ").grid(row=1, column=0)
+        self.fname_label = tk.Label(master, text="")
+        self.fname_label.grid(row=1, column=1)
+        
+        tk.Label(master, text="Last Name: ").grid(row=2, column=0)
+        self.lname_label = tk.Label(master, text="")
+        self.lname_label.grid(row=2, column=1)
+        
+        tk.Label(master, text="Age: ").grid(row=3, column=0)
+        self.age_label = tk.Label(master, text="")
+        self.age_label.grid(row=3, column=1)
 
-    def display_patients(self):
+        tk.Label(master, text="Contact Phone: ").grid(row=4, column=0)
+        self.ph_label = tk.Label(master, text="")
+        self.ph_label.grid(row=4, column=1)
+
+        tk.Label(master, text="Contact Email: ").grid(row=5, column=0)
+        self.email_label = tk.Label(master, text="")
+        self.email_label.grid(row=5, column=1)
+
+        tk.Label(master, text="Audio File: ").grid(row=6, column=0)
+        self.audio_label = tk.Label(master, text="")
+        self.audio_label.grid(row=6, column=1)
+
+        self.plot_label = tk.Label(self.master)
+        self.plot_label.grid(row=7, column=0, columnspan=3, padx=5, pady=5)
+        self.figure = plt.figure(figsize=(3, 2))
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.master)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=8, column=0, columnspan=3, padx=5, pady=5)
+
+        tk.Label(master, text = "Physician quick response: ").grid(row = 9, column = 0)
+        self.selected_provider = tk.StringVar()
+        self.provider_dropdown = tk.OptionMenu(master, self.selected_provider, "Normal", "Need to visit sleep clinic", "Need to get sleep study")
+        self.provider_dropdown.config(width=30)
+        self.provider_dropdown.grid(row=9, column=1)
+        self.save_button = tk.Button(master, text="Save", command=self.save_to_mongodb)
+        self.save_button.grid(row=10, column=3, columnspan=1)
+
+        # create a label and text box for physician notes
+        tk.Label(master, text="Physician notes: ").grid(row=10, column=0)
+        self.physician_notes_text = tk.Text(master, height=10, width=30)  # Multiline text box
+        self.physician_notes_text.grid(row=10, column=1)
+
+        # Create a label for displaying the save status
+        self.save_status_label = tk.Label(master, text="")
+        self.save_status_label.grid(row=11, column=3, columnspan=4)
+
+        self.connect_to_mongodb()
+
+    
+
+    def open_patient(self):
+            '''
+            This methods displays the patient information for the specific record number choosen
+            Parameters: None
+            Returns: None
+            '''
+            client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+            db = client["patients_db"]
+            collection = db["patients"]
+            fs = GridFS(db)
+       
+            # get the patient id from the entry widget
+            patient_id = self.patient_num_entry.get()
+
+            # query the patient information from MongoDB
+            patient = collection.find_one({'patient record number': patient_id}) #{'patient record number': patient_id}
+          
+            #update the labels with patient information
+            if patient:
+                self.fname_label.config(text = patient["first name"])
+                self.lname_label.config(text = patient["last name"])
+                self.age_label.config(text = patient["age"])
+                self.ph_label.config(text = patient["phone"])
+                self.email_label.config(text = patient["email"])
+                audio_file_id = patient["audio_file"]
+                audio_file = fs.get(ObjectId(audio_file_id))
+                self.audio_label.config(text=audio_file.filename)
+                
+                # Load the audio file data
+                audio_data, sample_rate = librosa.load(audio_file,sr=44100)
+                
+                # Calculate the duration of the audio data
+                duration = len(audio_data) / sample_rate
+                time_axis = np.linspace(0, duration, len(audio_data), endpoint=False)
+                
+                # Plot the audio data
+                self.figure.clear()
+                plt.plot(time_axis,audio_data)
+                plt.xlabel('Time (seconds)')
+                plt.ylabel('Amplitude')
+                plt.tight_layout()
+                self.canvas.draw()
+
+            else:
+                self.fname_label.config(text="")
+                self.lname_label.config(text = "")
+                self.age_label.config(text = "")
+                self.ph_label.config(text = "")
+                self.email_label.config(text = "")
+                self.audio_label.config(text = "")
+    
+    def connect_to_mongodb(self):
         '''
-        Displays all patient information in the GUI window.
+            This methods connects to mongodb to upload the provider information such as 
+            quick response and physician notes
+            Parameters: None
+            Returns: None
+        '''
+       
+        self.client = MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+        self.db = self.client['mydatabase']
+        self.collection = self.db['provider_data']
+    
 
-        Parameters: None
+    def save_to_mongodb(self):
+        '''
+            This methods uploads the data to mongodb to upload the patient information such as 
+            name, age, provider quick response and notes. 
+            Parameters: None
+            Returns: None
+        '''
+        patient_num = self.patient_num_entry.get()
+        fname = self.fname_label.cget("text")
+        lname = self.lname_label.cget("text")
+        age = self.age_label.cget("text")
+        provider = self.selected_provider.get()
+        physician_notes =  self.physician_notes_text.get("1.0", tk.END).strip()
+        data = {
+            'patient_num': patient_num,
+            'patient_fname': fname,
+            'patient_lname': lname,
+            'patient_age': age,
+            'provider': provider,
+            'physician_notes': physician_notes
+        }
+
+        # Insert data into MongoDB
+        self.collection.insert_one(data)
+        print("Data saved to MongoDB!")
+        # Update the save status label
+        self.save_status_label.config(text="Data saved")
+
+
+
+
+
+
+
+class ExistingPatientForm(tk.Frame):
+    '''
+    This form is used by the patient to view the physician feedback. When the physician provides feedback using the 
+    provider form, the patient can view the feedback through this Existing user form. Patient record number needs to 
+    be entered to open the patient information and feedback. 
+
+    Attributes:
+    - master (Tk): the root window for the GUI.
+
+    Methods:
+    - __init__(self, master=None): initializes the ExistingPatientForm window and its elements.
+    - open_patients(self): gets the patient record number and searches from MongoDB to get the patient information inclucing
+    physician feedback
+    '''
+    def __init__(self, master=None):
+        '''
+        Initializes the PatientForms window and its elements.
+
+        Parameters:
+        master (Tk): the root window for the GUI.
 
         Returns:None
         '''
-        # retrieve all patient documents from the collection
-        patients = collection.find()
+        super().__init__(master)
+        self.master = master
+        self.master.title("Existing User Form")
+       
 
-        # create a string to display the patient information
-        info_str = "Patient Information:\n\n"
-        for patient in patients:
-            info_str += f"Name: {patient['name']}\nAge: {patient['age']}\nAudio File: {patient['audio_file']}\n\n"
+        # create a label and entry for patient id
+        tk.Label(master, text="Patient Record Number: ").grid(row=0, column=0)
+        self.patient_num_entry = tk.Entry(master)
+        self.patient_num_entry.grid(row=0, column=1)
 
-        # display the patient information in the label
-        self.info_label.config(text=info_str)
+        # create a button to open the patient information
+        tk.Button(master, text="Open", command=self.open_patient).grid(row=0, column=2)
 
-    def search_patients(self):
-        '''
-        Searches for patients in the database based on a search query depending on the patient record number. 
+        # create labels to display patient information
+        tk.Label(master, text="First Name: ").grid(row=1, column=0)
+        self.fname_label = tk.Label(master, text="")
+        self.fname_label.grid(row=1, column=1)
+        
+        tk.Label(master, text="Last Name: ").grid(row=2, column=0)
+        self.lname_label = tk.Label(master, text="")
+        self.lname_label.grid(row=2, column=1)
+        
+        tk.Label(master, text="Age: ").grid(row=3, column=0)
+        self.age_label = tk.Label(master, text="")
+        self.age_label.grid(row=3, column=1)
 
-        Parameters: None
-
-        Returns:None
-        '''
-        # retrieve the search query from the search bar
-        search_query = self.search_var.get()
-
-        # query the collection for patient documents that match the search query
-        patients = collection.find({"name": {"$regex": search_query, "$options": "i"}})
-
-        # create a string to display the search results
-        info_str = "Search Results:\n\n"
-        for patient in patients:
-            info_str += f"Name: {patient['name']}\nAge: {patient['age']}\nAudio File: {patient['audio_file']}\n\n"
-
-        # display the search results in the label
-        self.info_label.config(text=info_str)
-
+        tk.Label(master, text = "Physician quick response: ").grid(row = 6, column = 0)
+        self.QuickResponse_label = tk.Label(master, text="")
+        self.QuickResponse_label.grid(row=6, column=1)
+       
+        tk.Label(master, text = "Physician notes: ").grid(row = 7, column = 0)
+        self.notes_label = tk.Label(master, text="")
+        self.notes_label.grid(row=7, column=1)
 
 
+    def open_patient(self):
+            '''
+            This methods displays the patient information for the specific record number choosen
+            '''
+            client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+            db = client["mydatabase"]
+            collection = db["provider_data"]
+        
+            # get the patient id from the entry widget
+            patient_id = self.patient_num_entry.get()
+            print(patient_id )
+            # query the patient information from MongoDB
+            patient = collection.find_one({'patient_num': patient_id}) #{'patient record number': patient_id}
+            #print(patient)
+            #update the labels with patient information
+            if patient:
+                self.fname_label.config(text = patient["patient_fname"])
+                self.lname_label.config(text = patient["patient_lname"])
+                self.age_label.config(text = patient["patient_age"])
+                self.QuickResponse_label.config(text = patient["provider"])
+                self.notes_label.config(text = patient["physician_notes"])
+                
 
+            else:
+                self.fname_label.config(text="")
+                self.lname_label.config(text = "")
+                self.age_label.config(text = "")
+                self.QuickResponse_label.config(text = "")
+                self.notes_label.config(text = "")
+                
+
+
+
+
+# root = tk.Tk()
+# #Simultaneous display
+# # Create the login window as a Toplevel widget
+# login_window = tk.Toplevel(root)
+# login = LoginGUI(login_window)
+
+# # Create the provider form window as a Toplevel widget
+# provider_window = tk.Toplevel(root)
+# provider_form = ProviderForm(provider_window)
+# # Start the main event loop for the main window
+# root.mainloop()
+
+
+#individual display for testing
 root = tk.Tk()
 login = LoginGUI(root)
+root.attributes('-fullscreen', True)
 root.mainloop()
 
-
+# root2 = tk.Tk()
+# login = ProviderForm(root2)
+# root2.attributes('-fullscreen', True)
+# root2.mainloop()
 
 
 

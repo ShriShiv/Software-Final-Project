@@ -18,6 +18,9 @@ pymongo
 numpy 
 wave
 librosa
+gridfs (GridFS)
+bson (ObjectId)
+os
 
 The windows will be displayed in GUI. 
 
@@ -29,13 +32,17 @@ The windows will be displayed in GUI.
 2. Login using a specific userID and Password (SoftwareProject and asdf12345)
 3. If the login is incorrect, there will be a popup that states "Incorrect username or password" 
 4. Try again to add the correct username and password
-5. Once entered, patient GUI opens up
-6. Here, patient details such as first name, last name, age, medical record number, phone, email, and snoring audio can be added
-7. Snoring audio will open the folders in the desktop and allow to select the correct file
-8. The snoring audio should be in .wav form 
-9. Once the file is selected, the paitent GUI will automatically generate a plot that displays the snoring graph which is useful for the provider
-10. After adding all the data, the user can hit submit and the data will be taken to the server 
-
+5. Once entered, the user type GUI opens up. This allows you to select if it is an existing user or a new user
+6. To enter new user information, please select new user
+7. Once entered, patient GUI opens up
+8. Here, patient details such as first name, last name, age, medical record number, phone, email, and snoring audio can be added
+9. Snoring audio will open the folders in the desktop and allow to select the correct file
+10. The snoring audio should be in .wav form 
+11. Once the file is selected, the paitent GUI will automatically generate a plot that displays the snoring graph which is useful for the provider
+12. After adding all the data, the user can hit submit and the data will be taken to the server 
+13. There are also two other bottons on the bottom of the form. They are "new form" and "back". "new form" erases the existing form so new patient information can be included. "back" takes the user back to the User Type GUI where a new patient or exisitng patient can be selected.
+14. To view physician feedback of an existing patient, select existing patient in the User Type GUI. This will open a form
+15. Enter patient record number and select open. This will open patient information and the physician feedback. 
 
 #### Provider Side
 
