@@ -20,7 +20,7 @@ import os
 import librosa.display
 
 #Initilizing connection to MongoDB 
-client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+client = pymongo.MongoClient("mongodb+srv://<username>:<password>@cluster0.cxduuuj.mongodb.net/")
 db = client["mydatabase"]
 collection = db["patients"]
 print(client.server_info())
@@ -354,7 +354,7 @@ class NewPatientForm(tk.Frame):
         audio_file_path = filedialog.askopenfilename(filetypes=[("Waveform Audio File Format", "*.wav")])
         if fname and lname and age and ph and email and audio_file_path:
             # Insert data into MongoDB
-            client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+            client = pymongo.MongoClient("mongodb+srv://<username>:<password>@cluster0.cxduuuj.mongodb.net/")
             db = client.patients_db
             fs = GridFS(db)
             with open(audio_file_path, 'rb') as f:
@@ -528,7 +528,7 @@ class ProviderForm(tk.Frame):
             Parameters: None
             Returns: None
             '''
-            client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+            client = pymongo.MongoClient("mongodb+srv://<username>:<password>@cluster0.cxduuuj.mongodb.net/")
             db = client["patients_db"]
             collection = db["patients"]
             fs = GridFS(db)
@@ -581,7 +581,7 @@ class ProviderForm(tk.Frame):
             Returns: None
         '''
        
-        self.client = MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+        self.client = MongoClient("mongodb+srv://<username>:<password>@cluster0.cxduuuj.mongodb.net/")
         self.db = self.client['mydatabase']
         self.collection = self.db['provider_data']
     
@@ -682,7 +682,7 @@ class ExistingPatientForm(tk.Frame):
             '''
             This methods displays the patient information for the specific record number choosen
             '''
-            client = pymongo.MongoClient("mongodb+srv://sshivra1:Spsleo05@cluster0.cxduuuj.mongodb.net/")
+            client = pymongo.MongoClient("mongodb+srv://<username>:<password>@cluster0.cxduuuj.mongodb.net/")
             db = client["mydatabase"]
             collection = db["provider_data"]
         
